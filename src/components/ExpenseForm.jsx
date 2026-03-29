@@ -95,12 +95,12 @@ export default function ExpenseForm({ onExpenseAdded }) {
         </div>
 
         {step === 1 && (
-          <div style={{ display:"flex", gap:10 }}>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
             <input name="title" type="text" placeholder="e.g. Groceries, Uber, Netflix..."
               value={form.title} onChange={handleChange} onKeyDown={handleTitleNext}
               autoFocus style={inputStyle} />
             <button onClick={() => { if(!form.title.trim()) return setError("Enter a title."); setError(""); setStep(2); }}
-              style={{ padding:"10px 20px",borderRadius:12,background:"rgba(56,189,248,0.6)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:600,whiteSpace:"nowrap" }}>
+              style={{ padding:"10px 20px",borderRadius:12,background:"rgba(56,189,248,0.6)",color:"#fff",border:"none",cursor:"pointer",fontSize:13, minWidth:90, fontWeight:600,whiteSpace:"nowrap" }}>
               Next →
             </button>
           </div>
@@ -118,13 +118,13 @@ export default function ExpenseForm({ onExpenseAdded }) {
                 onKeyDown={(e) => { if(e.key==="Enter") handleSave(); if(e.key==="Escape") handleClose(); }}
                 autoFocus style={inputStyle} />
               <select name="category" value={form.category} onChange={handleChange}
-                style={{ ...inputStyle, width:"auto", minWidth:130, background:"#0a1628", cursor:"pointer" }}>
+                style={{ ...inputStyle, minWidth:120, flex:"1", background:"#0a1628", cursor:"pointer" }}>
                 {CATEGORIES.map(c => (
                   <option key={c} value={c} style={{ background:"#0a1628",color:"#fff" }}>{c}</option>
                 ))}
               </select>
               <button onClick={handleSave} disabled={loading}
-                style={{ padding:"10px 20px",borderRadius:12,background:"rgba(56,189,248,0.6)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:600,opacity:loading?0.5:1,whiteSpace:"nowrap" }}>
+                style={{ padding:"10px 20px",borderRadius:12,background:"rgba(56,189,248,0.6)",color:"#fff",border:"none", flexShrink:0 ,cursor:"pointer",fontSize:13,fontWeight:600,opacity:loading?0.5:1,whiteSpace:"nowrap" }}>
                 {loading ? "Saving..." : "Save"}
               </button>
             </div>
