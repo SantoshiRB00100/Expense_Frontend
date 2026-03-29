@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "https://expense-backend-220g.onrender.com/api";
 
 export const getExpenses = () => axios.get(`${BASE_URL}/expenses/get`);
 export const createExpense = (data) => axios.post(`${BASE_URL}/expenses/create`, data);
