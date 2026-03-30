@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import axios from "axios";
+import { setBudget } from "../api";
 
 export default function SummaryCard({ summary, onBudgetUpdated }) {
   const { budget = 0, spent = 0, remaining = 0 } = summary;
@@ -11,12 +11,20 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
+  const cardRef     = useRef(null);
   const pbarRef     = useRef(null);
   const budgetRef   = useRef(null);
   const spentRef    = useRef(null);
   const remainRef   = useRef(null);
-  const editFormRef = useRef(null);   // ← ref instead of className
+  const editFormRef = useRef(null);
   const prevSummary = useRef({ budget: 0, spent: 0, remaining: 0 });
+
+  // ✅ Fade in card on mount
+  useEffect(() => {
+    if (cardRef.current) {
+      gsap.to(cardRef.current, { opacity: 1, duration: 0.6, ease: "power3.out" });
+    }
+  }, []);
 
   // count up + progress bar
   useEffect(() => {
@@ -59,7 +67,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
     });
   }, []);
 
-  // animate edit form using ref — fires after DOM is ready
+  // animate edit form
   useEffect(() => {
     if (editing && editFormRef.current) {
       gsap.fromTo(editFormRef.current,
@@ -77,7 +85,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
     if (!amount || amount <= 0) return setError("Enter a valid amount.");
     setLoading(true);
     try {
-      await axios.post("http://localhost:3000/api/budget/setBudget", { amount });
+      await setBudget(amount); // ✅ uses api.js, no hardcoded URL
       gsap.fromTo(".budget-card-inner",
         { scale: 1 },
         { scale: 1.02, duration: 0.15, yoyo: true, repeat: 1, ease: "power2.inOut" }
@@ -99,15 +107,18 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
   };
 
   return (
-    <div className="main-card budget-card-inner" style={{
-      background: "linear-gradient(145deg,#071428 0%,#050f1c 100%)",
-      borderRadius: 24,
-      padding: "clamp(14px, 4vw, 28px)",
-      marginBottom: 16,
-      border: "1px solid rgba(56,189,248,0.1)",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(56,189,248,0.08)",
-      position: "relative", overflow: "hidden", opacity: 0
-    }}>
+    <div
+      ref={cardRef}
+      className="main-card budget-card-inner"
+      style={{
+        background: "linear-gradient(145deg,#071428 0%,#050f1c 100%)",
+        borderRadius: 24,
+        padding: "clamp(14px, 4vw, 28px)",
+        marginBottom: 16,
+        border: "1px solid rgba(56,189,248,0.1)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(56,189,248,0.08)",
+        position: "relative", overflow: "hidden", opacity: 0
+      }}>
 
       {/* orbs */}
       <div style={{ position:"absolute",top:-80,right:-80,width:260,height:260,background:"radial-gradient(circle,rgba(56,189,248,0.13) 0%,transparent 70%)",pointerEvents:"none" }} />
@@ -135,12 +146,11 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
         )}
       </div>
 
-      {/* edit form — ref based, no opacity:0 inline */}
+      {/* edit form */}
       {editing && (
         <div ref={editFormRef} style={{
           display:"flex", flexDirection:"column", gap:10,
           marginBottom:20, position:"relative", zIndex:1
-          /* no opacity:0 here — GSAP sets it via fromTo */
         }}>
           <input
             type="number"
@@ -151,7 +161,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             placeholder="Enter new budget amount"
             style={{
               width:"100%", padding:"12px 16px", borderRadius:12,
-              fontSize:16,                          // 16px stops iOS zoom
+              fontSize:16,
               border:"1px solid rgba(56,189,248,0.4)",
               background:"#0e1f35", color:"#fff", outline:"none",
               boxSizing:"border-box"
@@ -201,7 +211,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             textAlign:"center",
             border:"1px solid rgba(255,255,255,0.05)",
             boxShadow:"inset 0 1px 0 rgba(56,189,248,0.07), 0 4px 16px rgba(0,0,0,0.3)",
-            minWidth:0,         // ← critical: allows grid cell to shrink
+            minWidth:0,
             overflow:"hidden"
           }}>
             <div ref={s.ref} style={{
