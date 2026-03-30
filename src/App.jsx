@@ -39,12 +39,37 @@ export default function App() {
   }, [loading]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060d18", padding: "24px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#060d18", padding: "16px 12px" }}>
+
+      {/* global mobile fixes */}
+      <style>{`
+        * { box-sizing: border-box; }
+        body { overflow-x: hidden; }
+
+        .budget-card-inner { padding: 24px; }
+        .stat-val-text { font-size: clamp(11px, 3.8vw, 21px) !important; word-break: break-all; }
+        .stat-lbl-text { font-size: clamp(8px, 2.2vw, 11px) !important; }
+        .stat-cell {
+          padding: clamp(8px, 2vw, 16px) clamp(4px, 1.5vw, 10px) !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+        .stats-grid {
+          gap: clamp(6px, 2vw, 16px) !important;
+        }
+
+        @media (max-width: 380px) {
+          .budget-card-inner { padding: 14px !important; }
+          .app-header-inner  { padding: 14px 16px !important; }
+          .edit-form-wrap input { font-size: 16px !important; }
+        }
+      `}</style>
+
       <div ref={appRef} style={{ maxWidth: 600, margin: "0 auto" }}>
 
-        <div className="app-header" style={{
+        <div className="app-header app-header-inner" style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "20px 24px", marginBottom: 20,
+          padding: "18px 20px", marginBottom: 16,
           background: "linear-gradient(135deg, #071428 0%, #050f1e 100%)",
           borderRadius: 20,
           border: "1px solid rgba(56,189,248,0.12)",
@@ -52,14 +77,14 @@ export default function App() {
           opacity: 0
         }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>
+            <h1 style={{ fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>
               Expense Tracker
             </h1>
             <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "2px 0 0" }}>
               Keep tabs on your spending
             </p>
           </div>
-          <span style={{ fontSize: 28, filter: "drop-shadow(0 0 14px rgba(56,189,248,0.6))" }}>💰</span>
+          <span style={{ fontSize: 26, filter: "drop-shadow(0 0 14px rgba(56,189,248,0.6))" }}>💰</span>
         </div>
 
         {loading ? (

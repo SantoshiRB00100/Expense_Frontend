@@ -6,17 +6,19 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
   const { budget = 0, spent = 0, remaining = 0 } = summary;
   const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
 
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing]   = useState(false);
   const [inputVal, setInputVal] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
-  const pbarRef    = useRef(null);
-  const budgetRef  = useRef(null);
-  const spentRef   = useRef(null);
-  const remainRef  = useRef(null);
+  const pbarRef     = useRef(null);
+  const budgetRef   = useRef(null);
+  const spentRef    = useRef(null);
+  const remainRef   = useRef(null);
+  const editFormRef = useRef(null);   // ← ref instead of className
   const prevSummary = useRef({ budget: 0, spent: 0, remaining: 0 });
 
+  // count up + progress bar
   useEffect(() => {
     const prev = prevSummary.current;
     gsap.to(prev, {
@@ -49,6 +51,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
     prevSummary.current = { budget, spent, remaining };
   }, [budget, spent, remaining, pct]);
 
+  // edit btn pulse
   useEffect(() => {
     gsap.to(".edit-budget-btn", {
       boxShadow: "0 0 24px rgba(245,158,11,0.45)",
@@ -56,11 +59,11 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
     });
   }, []);
 
-  // animate edit form sliding in
+  // animate edit form using ref — fires after DOM is ready
   useEffect(() => {
-    if (editing) {
-      gsap.fromTo(".edit-form-wrap",
-        { opacity: 0, y: -8 },
+    if (editing && editFormRef.current) {
+      gsap.fromTo(editFormRef.current,
+        { opacity: 0, y: -10 },
         { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }
       );
     }
@@ -98,7 +101,9 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
   return (
     <div className="main-card budget-card-inner" style={{
       background: "linear-gradient(145deg,#071428 0%,#050f1c 100%)",
-      borderRadius: 24, padding: 28, marginBottom: 16,
+      borderRadius: 24,
+      padding: "clamp(14px, 4vw, 28px)",
+      marginBottom: 16,
       border: "1px solid rgba(56,189,248,0.1)",
       boxShadow: "0 20px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(56,189,248,0.08)",
       position: "relative", overflow: "hidden", opacity: 0
@@ -108,14 +113,14 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
       <div style={{ position:"absolute",top:-80,right:-80,width:260,height:260,background:"radial-gradient(circle,rgba(56,189,248,0.13) 0%,transparent 70%)",pointerEvents:"none" }} />
       <div style={{ position:"absolute",bottom:-60,left:-60,width:200,height:200,background:"radial-gradient(circle,rgba(245,158,11,0.1) 0%,transparent 70%)",pointerEvents:"none" }} />
 
-      {/* header row — wraps on mobile */}
+      {/* header */}
       <div style={{
         display:"flex", alignItems:"center", justifyContent:"space-between",
-        flexWrap:"wrap", gap:10,
-        marginBottom: editing ? 12 : 24,
+        flexWrap:"wrap", gap:8,
+        marginBottom: editing ? 14 : 24,
         position:"relative", zIndex:1
       }}>
-        <span style={{ fontSize:10,fontWeight:600,letterSpacing:2,color:"rgba(56,189,248,0.5)",textTransform:"uppercase" }}>
+        <span style={{ fontSize:10, fontWeight:600, letterSpacing:2, color:"rgba(56,189,248,0.5)", textTransform:"uppercase" }}>
           Budget Overview
         </span>
         {!editing && (
@@ -130,11 +135,12 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
         )}
       </div>
 
-      {/* edit form — full width, stacked on mobile */}
+      {/* edit form — ref based, no opacity:0 inline */}
       {editing && (
-        <div className="edit-form-wrap" style={{
+        <div ref={editFormRef} style={{
           display:"flex", flexDirection:"column", gap:10,
-          marginBottom:20, position:"relative", zIndex:1, opacity:0
+          marginBottom:20, position:"relative", zIndex:1
+          /* no opacity:0 here — GSAP sets it via fromTo */
         }}>
           <input
             type="number"
@@ -144,7 +150,8 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             onKeyDown={handleKeyDown}
             placeholder="Enter new budget amount"
             style={{
-              width:"100%", padding:"12px 16px", borderRadius:12, fontSize:15,
+              width:"100%", padding:"12px 16px", borderRadius:12,
+              fontSize:16,                          // 16px stops iOS zoom
               border:"1px solid rgba(56,189,248,0.4)",
               background:"#0e1f35", color:"#fff", outline:"none",
               boxSizing:"border-box"
@@ -154,7 +161,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             <button onClick={handleSave} disabled={loading} style={{
               flex:1, padding:"12px", borderRadius:12,
               background:"rgba(56,189,248,0.7)", color:"#fff",
-              border:"none", cursor:"pointer", fontSize:14,
+              border:"none", cursor:"pointer", fontSize:15,
               fontWeight:600, opacity: loading ? 0.5 : 1
             }}>
               {loading ? "Saving..." : "Save"}
@@ -162,7 +169,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             <button onClick={handleCancel} style={{
               flex:1, padding:"12px", borderRadius:12,
               background:"transparent", color:"rgba(255,255,255,0.5)",
-              border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer", fontSize:14
+              border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer", fontSize:15
             }}>
               Cancel
             </button>
@@ -171,39 +178,53 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
         </div>
       )}
 
-      {/* stats */}
-      <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:24,position:"relative",zIndex:1 }}>
+      {/* stats grid */}
+      <div style={{
+        display:"grid", gridTemplateColumns:"repeat(3,1fr)",
+        gap:"clamp(6px, 2vw, 16px)",
+        marginBottom:24, position:"relative", zIndex:1
+      }}>
         {[
           { ref: budgetRef, color:"#38bdf8", glow:"rgba(56,189,248,0.55)", label:"Total Budget" },
-          { ref: spentRef,  color:"#fbbf24", glow:"rgba(251,191,36,0.5)",  label:"Spent" },
-          { ref: remainRef,
+          { ref: spentRef,  color:"#fbbf24", glow:"rgba(251,191,36,0.5)",  label:"Spent"        },
+          {
+            ref: remainRef,
             color: remaining >= 0 ? "#a3e635" : "#f87171",
             glow:  remaining >= 0 ? "rgba(163,230,53,0.5)" : "rgba(248,113,113,0.4)",
             label:"Remaining"
           },
         ].map((s) => (
           <div key={s.label} style={{
-            background:"rgba(255,255,255,0.03)", borderRadius:16, padding:"16px 8px",
-            textAlign:"center", border:"1px solid rgba(255,255,255,0.05)",
-            boxShadow:"inset 0 1px 0 rgba(56,189,248,0.07), 0 4px 16px rgba(0,0,0,0.3)"
+            background:"rgba(255,255,255,0.03)",
+            borderRadius:16,
+            padding:"clamp(8px, 2vw, 16px) clamp(4px, 1.5vw, 10px)",
+            textAlign:"center",
+            border:"1px solid rgba(255,255,255,0.05)",
+            boxShadow:"inset 0 1px 0 rgba(56,189,248,0.07), 0 4px 16px rgba(0,0,0,0.3)",
+            minWidth:0,         // ← critical: allows grid cell to shrink
+            overflow:"hidden"
           }}>
             <div ref={s.ref} style={{
-              fontSize:"clamp(14px, 4vw, 21px)",   // ← shrinks on small screens
+              fontSize:"clamp(11px, 3.8vw, 21px)",
               fontWeight:700, letterSpacing:"-0.5px",
-              color:s.color, textShadow:`0 0 22px ${s.glow}`
+              color:s.color, textShadow:`0 0 22px ${s.glow}`,
+              wordBreak:"break-all"
             }}>
               ₹0
             </div>
-            <div style={{ fontSize:"clamp(9px, 2.5vw, 11px)", color:"rgba(255,255,255,0.3)", marginTop:4 }}>
+            <div style={{
+              fontSize:"clamp(8px, 2.2vw, 11px)",
+              color:"rgba(255,255,255,0.3)", marginTop:4
+            }}>
               {s.label}
             </div>
           </div>
         ))}
       </div>
 
-      {/* progress */}
+      {/* progress bar */}
       <div style={{ position:"relative", zIndex:1 }}>
-        <div style={{ height:8,borderRadius:99,background:"rgba(255,255,255,0.05)",overflow:"hidden",boxShadow:"inset 0 2px 4px rgba(0,0,0,0.4)" }}>
+        <div style={{ height:8, borderRadius:99, background:"rgba(255,255,255,0.05)", overflow:"hidden", boxShadow:"inset 0 2px 4px rgba(0,0,0,0.4)" }}>
           <div ref={pbarRef} style={{
             height:"100%", width:"0%", borderRadius:99,
             background: pct >= 100
@@ -221,7 +242,7 @@ export default function SummaryCard({ summary, onBudgetUpdated }) {
             }} />
           </div>
         </div>
-        <div style={{ display:"flex",justifyContent:"flex-end",marginTop:7,fontSize:11,color:"rgba(56,189,248,0.4)" }}>
+        <div style={{ display:"flex", justifyContent:"flex-end", marginTop:7, fontSize:11, color:"rgba(56,189,248,0.4)" }}>
           {pct.toFixed(0)}% used
         </div>
       </div>
